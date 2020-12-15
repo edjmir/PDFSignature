@@ -121,7 +121,7 @@
                         <div class="container d-flex justify-content-around mt-2">
                             <div class="row">
                                 <div class="col-md-4 col-sm-12">
-                                    <img class="rounded-circle" src="./key.png" width="100%">
+                                    <img class="rounded-circle" src="./img/key.png" width="100%">
                                 </div>
                                 <div class="col-md-8 col-sm-12 d-flex align-items-center">
                                     <p class="card-title h5">Crea tu par de llaves</p>
@@ -130,16 +130,16 @@
                         </div>
                         <div class="card-body">
                             <div class="container">
-                                <form id="sign-form" method="POST" action="/SignDocument" enctype="multipart/form-data">
+                                <form id="download-keys-form" method="POST" action="/SignDocument" enctype="multipart/form-data">
                                     <div class="form-row">
                                         <!--is-invalid is-valid-->
                                         <div class="col mb-3">
-                                            <label for="passcode">Contraseña</label>
-                                            <input type="text" class="form-control" placeholder="Contraseña" id="passcode" required>
+                                            <label for="download-key-passphrase">Contraseña</label>
+                                            <input type="text" class="form-control" placeholder="Contraseña" id="download-key-passphrase" required>
                                         </div>
                                     </div>
                                     <div class="form-row d-flex justify-content-end">
-                                        <button class="btn btn-primary mr-1" type="button" id="download-keys-btn">Descargar firma</button>
+                                        <button class="btn btn-primary mr-1" type="button" id="download-key-btn">Descargar firma</button>
                                     </div>
                                 </form>
                             </div>

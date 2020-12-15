@@ -4,9 +4,17 @@
         <servlet-name>SignDocument</servlet-name>
         <servlet-class>siganture.SignDocument</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>DownloadPrivateKey</servlet-name>
+        <servlet-class>servlets.DownloadPrivateKey</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>SignDocument</servlet-name>
         <url-pattern>/SignDocument</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DownloadPrivateKey</servlet-name>
+        <url-pattern>/DownloadPrivateKey</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
