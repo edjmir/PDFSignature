@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package servlets;
 
 import java.io.File;
@@ -14,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import key_handler.KeyPairGen;
 import utils.ProjectConstants;
 
 public class DownloadPrivateKey extends HttpServlet {
@@ -25,19 +21,31 @@ public class DownloadPrivateKey extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
         
-        // reads input file from an absolute path
-        File file_to_download = new File(ProjectConstants.PRIVATE_KEY_FILE_DEFAULT_PATH);
+        String passphrase = request.getParameter("passphrase");
+        final String file_name = ProjectConstants.PRIVATE_KEY_FILE_DEFAULT_PATH
+            .concat(String.valueOf(System.currentTimeMillis()))
+            .concat(ProjectConstants.PRIVATE_KEY_FILE_DEFAULT_NAME);
+        
+        KeyPairGen keyPairGen = new KeyPairGen();
+        
+        try {
+            if(passphrase == null)
+                keyPairGen.createAndSaveKeys(new File(file_name));
+            else
+                keyPairGen.createAndSaveKeys(new File(file_name), passphrase);
+        } catch (Exception ex) {
+            response.setStatus(500);
+            return;
+        }
+        
+        File file_to_download = new File(file_name);
         FileInputStream inStream = new FileInputStream(file_to_download);
-         
-        // if you want to use a relative path to context root:
-        String relativePath = getServletContext().getRealPath("");
-        //System.out.println("relativePath = " + relativePath);
-         
+                  
         // obtains ServletContext
         ServletContext context = getServletContext();
          
         // gets MIME type of the file
-        String mimeType = context.getMimeType(ProjectConstants.PRIVATE_KEY_FILE_DEFAULT_PATH);
+        String mimeType = context.getMimeType(file_name);
         // set to binary type if MIME mapping not found
         if (mimeType == null)
             mimeType = ProjectConstants.DEFAULT_MIME_TYPE;

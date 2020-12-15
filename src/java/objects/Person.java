@@ -1,4 +1,4 @@
-package siganture;
+package objects;
 
 public class Person {
     

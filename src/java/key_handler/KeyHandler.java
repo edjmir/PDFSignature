@@ -1,4 +1,4 @@
-package KeyGenerator;
+package key_handler;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
