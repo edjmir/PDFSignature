@@ -40,17 +40,24 @@ const addListeners = () => {
             body: form_data
         }).then( res => res.blob() )
         .then( blob => {
+            if(blob.size === 0){
+                console.log("Error de los datos");
+                return;
+            }
             var file = window.URL.createObjectURL(blob);
             let file_name = "MyPdf.pdf";
             //window.location.assign(file);
             
             let link = document.createElement('a');
             link.href = file;
+            
             link.download = file_name;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
+        }).catch((error) => {
+            console.error('Error:', error);
         });
         
         console.log(res);
@@ -99,54 +106,3 @@ const downloadFile = (method, url, content_type, data, blob_type, file_def_name)
     };
     request.send(data);
  };
- 
- /*
-  * 
-  * let a = await fetch("SignDocument", {
-            method: "POST",
-            body: form_data
-        })
-        .then(response => {
-            response.blob();
-            file_name = response.headers.get('content-disposition');
-            if(!file_name)
-                file_name = "MyPdf.pdf";
-            let blob = new Blob([response.blob()], { type: "application/pdf" });
-            let link = document.createElement('a');
-            
-            link.href = window.URL.createObjectURL(blob);
-            link.download = file_name;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        })
-        .then(blob => {            
-            let link = document.createElement('a');
-            
-            link.href = window.URL.createObjectURL(blob);
-            link.download = file_name;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-  */
- 
- /*const res = downloadFile(
-            "POST",
-            "SignDocument",
-            'multipart/form-data;boundary="boundary";charset=UTF-8',
-            form_data,
-            "application/pdf",
-            "pk.key"
-        );*/
-/*
-let res = await fetch("SignDocument", {
-            method: "POST",
-            body: form_data
-        }).then( res => res.blob() )
-        .then( blob => {
-            var file = window.URL.createObjectURL(blob);
-            window.location.assign(file);
-        });
- * /
- */
