@@ -19,7 +19,7 @@ window.addEventListener("load", () => {
 
 const addFile = (input_file) => {
     input_file.value ?
-        input_file.nextElementSibling.innerHTML = input_file.value.split("\\").pop(-1) : alert("No se subió el archivo");
+        input_file.nextElementSibling.innerHTML = input_file.value.split("\\").pop(-1) : "Seleccionar archivo";
 };
 
 const addListeners = () => {
@@ -41,41 +41,40 @@ const addListeners = () => {
         });
         console.log(a);
     });
-    download_key_passphrase.addEventListener("click", async ()=> {
-        let content = document.getElementById('content').value;
-        let request = new XMLHttpRequest();
-        request.open('POST', '../server/', true);
-        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-        request.responseType = 'blob';
-
-        request.onload = function() {
-          // Only handle status code 200
-            if(request.status === 200) {
-                // Try to find out the filename from the content disposition `filename` value
-                let disposition = request.getResponseHeader('content-disposition');
-                let matches = /"([^"]*)"/.exec(disposition);
-                let filename = (matches !== null && matches[1] ? matches[1] : 'pk.key');
-
-                // The actual download
-                let blob = new Blob([request.response], { type: 'application/pdf' });
-                let link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = filename;
-
-                //document.body.appendChild(link);
-                link.click();
-                //document.body.removeChild(link);
-            } else {
-                //alert("No se pudieron crear las llaves");
-                console.log("No se pudieron crear las llaves");
-
-            }
-          };
-
-          request.send('passphrase=' + download_key_passphrase.value);
-      });
+    download_key_btn.addEventListener("click", async ()=> {
+        const data = `passphrase=${download_key_passphrase.value.length ? download_key_passphrase.value : null}`;
+        let res = downloadFile("POST", "DownloadPrivateKey", data, "application/pdf", "pk.key");
+        
+        if(res === -1){
+            console.log("No se pudieron obtener las llaves");
+        }
+    });
 };
 
-function downloadFile(urlToSend) {
-     
- }
+const downloadFile = (method, url, data, blob_type, file_def_name) => {
+    let request = new XMLHttpRequest();
+    request.open(method, url, true);
+    request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    request.responseType = 'blob';
+
+    request.onload = () => {
+      // Only handle status code 200
+        if(request.status === 200) {
+            // Try to find out the filename from the content disposition `filename` value
+            let disposition = request.getResponseHeader('content-disposition');
+            let matches = /"([^"]*)"/.exec(disposition);
+            let filename = (matches !== null && matches[1] ? matches[1] : file_def_name);
+
+            // The actual download
+            let blob = new Blob([request.response], { type: blob_type });
+            let link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+
+            link.click();
+        } else {
+            return -1;
+        }
+    };
+    request.send(data);
+ };

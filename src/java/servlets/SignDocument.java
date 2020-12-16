@@ -10,51 +10,35 @@ import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Signature;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.crypto.Cipher;
-import static javax.crypto.Cipher.PRIVATE_KEY;
 import javax.servlet.http.Part;
+import key_handler.PrivateKeySigner;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
-import objects.Person;
+import utils.ProjectConstants;
 //Optional 
 
 
 @WebServlet(name="SignDocument", urlPatterns = {"/SignDocument"})
 @MultipartConfig(
     fileSizeThreshold = 1024 * 1024, // 1MB
-    maxFileSize = 1024 * 1024 * 2, // 2MB
-    maxRequestSize = 1024 * 1024 * 2 + 1024 // 2.1 MB 
+    maxFileSize = 1024 * 1024 * 10, // 10MB
+    maxRequestSize = 1024 * 1024 * 10 + 1024 // 10.1 MB 
 )
 public class SignDocument extends HttpServlet {
-    
-    private String PK_EXTENSION = ".asc";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -81,41 +65,35 @@ public class SignDocument extends HttpServlet {
             
             String passphrase = request.getParameter("passphrase");
             Part filePart = request.getPart("file");
-            String file_name = filePart.getSubmittedFileName().replace(PK_EXTENSION, "");
+            //String file_name = filePart.getSubmittedFileName().replaceFirst("\\.[a-zA-Z]+$", "");
+            String path = ProjectConstants.PDF_FILE_DEFAULT_PATH
+                .concat(String.valueOf(System.currentTimeMillis()))
+                .concat("-")
+                .concat(ProjectConstants.PDF_FILE_DEFAULT_NAME);
             
-            //File file = PDF.createPDF(person, file_name);
-            PDF.createPDF(person, file_name);
-            /*if(file == null){
-                response.setStatus(500);
-                return;
-            }*/
+            request.setAttribute("file_path", path);
+            request.setAttribute("file_name", ProjectConstants.PDF_FILE_DEFAULT_NAME);
+                        
+            String private_key = Streams.asString(filePart.getInputStream(), "UTF-8");            
+            File pdf = PDF.createPDF(person, path);
             
-            String private_key = Streams.asString(filePart.getInputStream(), "UTF-8");
+            PrivateKeySigner signer = new PrivateKeySigner();
             
-            try {
-                String path = System.getProperty("user.dir").concat("/").concat(file_name).concat(".pdf");
-                byte data[] = readFile(path);
-                
-                Signature signature = Signature.getInstance("NONEwithRSA");
-                PrivateKey privateKey = KeyFromString.loadPrivateKey(private_key);
-                signature.initSign(privateKey);
-                signature.update(data);
-                
-                byte signed[] = signature.sign();
-                saveSignedDocument(path, signed);
-            } catch (Exception ex) {
-                System.err.println(ex.getMessage());
-                System.err.println(Arrays.toString(ex.getStackTrace()));
-                response.setStatus(500);
-            }
+            if("null".equals(String.valueOf(passphrase)))
+                signer.loadPrivateKey(private_key, null);
+            else
+                signer.loadPrivateKey(private_key, passphrase);
             
-        } catch (IOException | ServletException ex) {
+            System.out.println(
+                "Signature: " + Base64.getEncoder().encodeToString(signer.sign(pdf))
+            );
+            signer.sign(pdf);
+            
+            request.getRequestDispatcher("DownloadFile").forward(request, response);            
+        } catch (Exception ex) {
             System.err.println(ex.getMessage());
             System.err.println(Arrays.toString(ex.getStackTrace()));
             response.setStatus(500);
-        } finally {
-            PrintWriter out = response.getWriter();
-            out.close();
         }
         
     }
@@ -129,78 +107,7 @@ public class SignDocument extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
-    }
-    
-    private byte[] readFile(String path) throws Exception {
-        return Files.readAllBytes(Paths.get(path));
-    }
-    
-    public void saveSignedDocument(String path, byte[] sign) throws Exception {
-        try (FileOutputStream fos = new FileOutputStream(path)){
-            fos.write(sign);
-        }
-    }
-    
-    private static class KeyFromString {
-        public static PrivateKey loadPrivateKey(String privateKeyStr) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-            StringBuilder pkcs8Lines = new StringBuilder();
-            BufferedReader rdr = new BufferedReader(new StringReader(privateKeyStr));
-            String line;
-            while ((line = rdr.readLine()) != null) {
-                pkcs8Lines.append(line);
-            }
-
-            // Remove the "BEGIN" and "END" lines, as well as any whitespace
-
-            String pkcs8Pem = pkcs8Lines.toString();
-            pkcs8Pem = pkcs8Pem.replace("-----BEGIN PRIVATE KEY-----", "");
-            pkcs8Pem = pkcs8Pem.replace("-----END PRIVATE KEY-----", "");
-            pkcs8Pem = pkcs8Pem.replaceAll("\\s+","");
-
-            // Base64 decode the result
-
-            byte [] pkcs8EncodedBytes = Base64.getDecoder().decode(pkcs8Pem.getBytes());
-
-            // extract the private key
-
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8EncodedBytes);
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PrivateKey privKey = kf.generatePrivate(keySpec);
-            
-            System.out.println(privKey);
-            return privKey;
-        }
-        
-        public static PrivateKey loadPrivateKey(String privateKeyStr, String passcode) throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
-            StringBuilder pkcs8Lines = new StringBuilder();
-            BufferedReader rdr = new BufferedReader(new StringReader(privateKeyStr));
-            String line;
-            while ((line = rdr.readLine()) != null) {
-                pkcs8Lines.append(line);
-            }
-            
-            Cipher cipher;
-
-            // Remove the "BEGIN" and "END" lines, as well as any whitespace
-            String pkcs8Pem = pkcs8Lines.toString();
-            pkcs8Pem = pkcs8Pem.replace("-----BEGIN PRIVATE KEY-----", "");
-            pkcs8Pem = pkcs8Pem.replace("-----END PRIVATE KEY-----", "");
-            pkcs8Pem = pkcs8Pem.replaceAll("\\s+","");
-            // Base64 decode the result
-
-            byte [] pkcs8EncodedBytes = Base64.getDecoder().decode(pkcs8Pem.getBytes());
-
-            // extract the private key
-
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkcs8EncodedBytes);
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PrivateKey privKey = kf.generatePrivate(keySpec);
-            
-            System.out.println(privKey);
-            return privKey;
-        }
-    }
-    
+    }    
     
     private static class ValidateData{
         public static Person createPerson(String name, String lastname, String identifier_str, String age_str){
@@ -218,20 +125,48 @@ public class SignDocument extends HttpServlet {
                 
                 person = new Person(name, lastname, identifier, age);
             } catch(NumberFormatException e) {
-                System.out.println(e.toString());
+                System.err.println(e.getMessage());
+                System.err.println(Arrays.toString(e.getStackTrace()));
             }
             
             return person;
         }
     }
     
+    private static class Person {
+    
+        private final String name;
+        private final String lastname;
+        private final long identifier;
+        private final byte age;
+
+        public Person(String name, String lastname, long identifier, byte age) {
+            this.name = name;
+            this.lastname = lastname;
+            this.identifier = identifier;
+            this.age = age;
+        }
+
+        public String getCompleteName() {
+            return name + ' ' + lastname;
+        }
+
+        public long getIdentifier() {
+            return identifier;
+        }
+
+        public byte getAge() {
+            return age;
+        }
+
+    }
+    
     private static class PDF {
-        public static File createPDF(Person person, String file_name) {
+        public static File createPDF(Person person, String path) {
             try {
                 Document document = new Document();
-                String path = System.getProperty("user.dir").concat("/").concat(file_name).concat(".pdf");
+                
                 File file = new File(path);
-                //System.out.println(path);
                 PdfWriter.getInstance(document, new FileOutputStream(file));
                 document.open();
                 
@@ -252,9 +187,9 @@ public class SignDocument extends HttpServlet {
                 return file;
                 
             } catch(DocumentException | FileNotFoundException e) {
-                
+                System.err.println(e.getMessage());
+                System.err.println(Arrays.toString(e.getStackTrace()));
             }
-            
             return null;
         }
         

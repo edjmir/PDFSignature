@@ -26,6 +26,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Base64;
+import utils.ProjectConstants;
 
 public class KeyPairGen {
     private final String PRIVKEY_ENCRYPTION_ALGORITHM;
@@ -57,7 +58,9 @@ public class KeyPairGen {
      * 4096 bits for the key size
      */
     public KeyPairGen() {
-        this("PBEWithSHA1AndDESede", "RSA", (short) 4096);
+        this.PRIVKEY_ENCRYPTION_ALGORITHM = ProjectConstants.PRIVKEY_ENCRYPTION_DEFAULT_ALGORITHM;
+        this.KEY_ALGORITHM = ProjectConstants.KEY_DEFAULT_ALGORITHM;
+        this.KEY_SIZE = ProjectConstants.KEY_DEFAULT_SIZE;
     }
 
     /**
@@ -138,19 +141,21 @@ public class KeyPairGen {
     public EncryptedPrivateKeyPair createAndSaveKeys(File file, String passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, InvalidParameterSpecException, InvalidKeySpecException, IllegalBlockSizeException {
         KeyPair keyPair = this.genKeyPair();
         PrivateKey privKey = keyPair.getPrivate();
-
-        boolean encrypt = passphrase != null;
+        
+        //System.out.println("Pass " + passphrase == null);
+        boolean encrypt = !(passphrase == null);
+        //System.out.println(encrypt + "Wow" + this.KEY_ALGORITHM);
 
         EncryptedPrivateKeyInfo encryptedPrivateKey = encrypt ? this.encryptPrivateKey(
-                privKey,
-                passphrase,
-                this.randomSalt(),
-                this.randomIV()
+            privKey,
+            passphrase,
+            this.randomSalt(),
+            this.randomIV()
         ) : null;
 
         // encode bytes to Base 64
         String privKeyEncrypted = Base64.getEncoder().encodeToString(
-                encrypt ? encryptedPrivateKey.getEncoded() : privKey.getEncoded()
+            encrypt ? encryptedPrivateKey.getEncoded() : privKey.getEncoded()
         );
 
         // dump base64 data to a string builder
@@ -186,7 +191,7 @@ public class KeyPairGen {
     }
 
     public EncryptedPrivateKeyPair createAndSaveKeys(File file) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, InvalidParameterSpecException, InvalidKeySpecException, IllegalBlockSizeException {
-            return this.createAndSaveKeys(file, null);
+        return this.createAndSaveKeys(file, null);
     }
 
     public static class EncryptedPrivateKeyPair {

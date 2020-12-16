@@ -62,14 +62,14 @@
                                         </div>
                                     </div>
                                     <div class="form-row">
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-12 mb-3">
                                            <label for="private-key">Llave privada</label>
                                             <div class="custom-file">
                                                 <input type="file" class="custom-file-input" id="private-key" lang="es">
                                                 <label class="custom-file-label" for="private-key">Seleccionar Archivo</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-12 mb-3">
                                             <label for="passphrase">Passphrase</label>
                                             <input type="text" class="form-control" placeholder="passphrase" id="passphrase" required>
                                             <div class="invalid-feedback">Al parecer tu edad es incorrecta</div>
