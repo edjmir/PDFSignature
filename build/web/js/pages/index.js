@@ -33,28 +33,48 @@ const addListeners = () => {
         form_data.append("lastname", lastname.value);
         form_data.append("age", age.value);
         form_data.append("identifier", identifier.value);
-        form_data.append("passphrase", passphrase.value);
+        form_data.append("passphrase", passphrase.value.length ? passphrase.value : null);
         
-        let a = await fetch("SignDocument", {
+        let res = await fetch("SignDocument", {
             method: "POST",
             body: form_data
+        }).then( res => res.blob() )
+        .then( blob => {
+            var file = window.URL.createObjectURL(blob);
+            let file_name = "MyPdf.pdf";
+            //window.location.assign(file);
+            
+            let link = document.createElement('a');
+            link.href = file;
+            link.download = file_name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
         });
-        console.log(a);
+        
+        console.log(res);
     });
     download_key_btn.addEventListener("click", async ()=> {
         const data = `passphrase=${download_key_passphrase.value.length ? download_key_passphrase.value : null}`;
-        let res = downloadFile("POST", "DownloadPrivateKey", data, "application/pdf", "pk.key");
-        
+        const res = downloadFile(
+            "POST",
+            "DownloadPrivateKey",
+            'application/x-www-form-urlencoded;charset=UTF-8',
+            data,
+            "application/octet-stream",
+            "pk.key"
+        );
         if(res === -1){
             console.log("No se pudieron obtener las llaves");
         }
     });
 };
 
-const downloadFile = (method, url, data, blob_type, file_def_name) => {
+const downloadFile = (method, url, content_type, data, blob_type, file_def_name) => {
     let request = new XMLHttpRequest();
     request.open(method, url, true);
-    request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    request.setRequestHeader('Content-Type', content_type);
     request.responseType = 'blob';
 
     request.onload = () => {
@@ -70,11 +90,63 @@ const downloadFile = (method, url, data, blob_type, file_def_name) => {
             let link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
             link.download = filename;
-
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
         } else {
             return -1;
         }
     };
     request.send(data);
  };
+ 
+ /*
+  * 
+  * let a = await fetch("SignDocument", {
+            method: "POST",
+            body: form_data
+        })
+        .then(response => {
+            response.blob();
+            file_name = response.headers.get('content-disposition');
+            if(!file_name)
+                file_name = "MyPdf.pdf";
+            let blob = new Blob([response.blob()], { type: "application/pdf" });
+            let link = document.createElement('a');
+            
+            link.href = window.URL.createObjectURL(blob);
+            link.download = file_name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        })
+        .then(blob => {            
+            let link = document.createElement('a');
+            
+            link.href = window.URL.createObjectURL(blob);
+            link.download = file_name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+  */
+ 
+ /*const res = downloadFile(
+            "POST",
+            "SignDocument",
+            'multipart/form-data;boundary="boundary";charset=UTF-8',
+            form_data,
+            "application/pdf",
+            "pk.key"
+        );*/
+/*
+let res = await fetch("SignDocument", {
+            method: "POST",
+            body: form_data
+        }).then( res => res.blob() )
+        .then( blob => {
+            var file = window.URL.createObjectURL(blob);
+            window.location.assign(file);
+        });
+ * /
+ */

@@ -29,8 +29,6 @@ import key_handler.PrivateKeySigner;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import utils.ProjectConstants;
-//Optional 
-
 
 @WebServlet(name="SignDocument", urlPatterns = {"/SignDocument"})
 @MultipartConfig(
@@ -50,12 +48,11 @@ public class SignDocument extends HttpServlet {
             return;
         }
         
-        try {            
+        try {
             String name = request.getParameter("name");
             String lastname = request.getParameter("lastname");
             String identifier_str = request.getParameter("identifier");
-            String age_str = request.getParameter("age");
-            
+            String age_str = request.getParameter("age");            
             
             Person person = ValidateData.createPerson(name, lastname, identifier_str, age_str);
             if(person == null){
@@ -79,10 +76,16 @@ public class SignDocument extends HttpServlet {
             
             PrivateKeySigner signer = new PrivateKeySigner();
             
-            if("null".equals(String.valueOf(passphrase)))
+            if("null".equals(String.valueOf(passphrase))){
+                System.out.println("Hola, sí entré");
                 signer.loadPrivateKey(private_key, null);
-            else
+                
+            }
+            else{
+                System.out.println("Perro" + passphrase);
                 signer.loadPrivateKey(private_key, passphrase);
+                
+            }
             
             System.out.println(
                 "Signature: " + Base64.getEncoder().encodeToString(signer.sign(pdf))
@@ -111,6 +114,9 @@ public class SignDocument extends HttpServlet {
     
     private static class ValidateData{
         public static Person createPerson(String name, String lastname, String identifier_str, String age_str){
+            if(name == null || lastname == null || identifier_str == null || age_str == null)
+                return null;
+            
             Person person = null;
             Pattern pattern = Pattern.compile("^([a-zA-ZñÑáéíóúüÁÉÍÓÚÜ]{2,15}( )?){1,2}$");
             Matcher matcher = pattern.matcher(name);
