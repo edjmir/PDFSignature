@@ -138,7 +138,7 @@ public class KeyPairGen {
         return (this.keyPair = keyPairGenerator.generateKeyPair());
     }
 
-    public EncryptedPrivateKeyPair createAndSaveKeys(File file, String passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, InvalidParameterSpecException, InvalidKeySpecException, IllegalBlockSizeException {
+    public EncryptedPrivateKeyPair createAndSaveKeys(File pk_file, File pb_file, String passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, InvalidParameterSpecException, InvalidKeySpecException, IllegalBlockSizeException {
         KeyPair keyPair = this.genKeyPair();
         PrivateKey privKey = keyPair.getPrivate();
         
@@ -159,12 +159,12 @@ public class KeyPairGen {
         );
 
         // dump base64 data to a string builder
-        StringBuilder builder = new StringBuilder(privKeyEncrypted.length() + 60 /* for the BEGIN/END lines*/);
+        StringBuilder pk_builder = new StringBuilder(privKeyEncrypted.length() + 60 /* for the BEGIN/END lines*/);
 
         // add header
-        builder.append("-----BEGIN ");
-        builder.append(encrypt ? "ENCRYPTED" : this.KEY_ALGORITHM);
-        builder.append(" PRIVATE KEY-----\n");
+        pk_builder.append("-----BEGIN ");
+        pk_builder.append(encrypt ? "ENCRYPTED" : this.KEY_ALGORITHM);
+        pk_builder.append(" PRIVATE KEY-----\n");
 
         // split the string in chunks of 64 chars
         int i = 0;
@@ -172,26 +172,54 @@ public class KeyPairGen {
         int length = privKeyEncrypted.length();
         while (i < length) {
                 next_i = 64 + i;
-                builder.append(privKeyEncrypted, i, Math.min(next_i, length)).append('\n');
+                pk_builder.append(privKeyEncrypted, i, Math.min(next_i, length)).append('\n');
                 i += 64;
         }
 
         // add footer
-        builder.append("-----END ");
-        builder.append(encrypt ? "ENCRYPTED" : this.KEY_ALGORITHM);
-        builder.append(" PRIVATE KEY-----\n");
+        pk_builder.append("-----END ");
+        pk_builder.append(encrypt ? "ENCRYPTED" : this.KEY_ALGORITHM);
+        pk_builder.append(" PRIVATE KEY-----\n");
 
         // write to file
-        try (FileOutputStream outStream = new FileOutputStream(file)) {
-                outStream.write(builder.toString().getBytes(StandardCharsets.UTF_8));
+        try (FileOutputStream outStream = new FileOutputStream(pk_file)) {
+            outStream.write(pk_builder.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        
+        PublicKey pbKey = keyPair.getPublic();
+        String pbKeyStr = Base64.getEncoder().encodeToString(pbKey.getEncoded());
+        
+        StringBuilder pb_builder = new StringBuilder(privKeyEncrypted.length() + 60 /* for the BEGIN/END lines*/);
+
+        // add header
+        pb_builder.append("-----BEGIN ");
+        pb_builder.append(this.KEY_ALGORITHM);
+        pb_builder.append(" PUBLIC KEY-----\n");
+
+        // split the string in chunks of 64 chars
+        i = 0;
+        length = pbKeyStr.length();
+        while (i < length) {
+                next_i = 64 + i;
+                pb_builder.append(pbKeyStr, i, Math.min(next_i, length)).append('\n');
+                i += 64;
+        }
+
+        // add footer
+        pb_builder.append("-----END ");
+        pb_builder.append(this.KEY_ALGORITHM);
+        pb_builder.append(" PUBLIC KEY-----\n");
+        
+        try (FileOutputStream outStream = new FileOutputStream(pb_file)) {
+            outStream.write(pb_builder.toString().getBytes(StandardCharsets.UTF_8));
         }
 
         //System.out.println(builder.toString());
         return new EncryptedPrivateKeyPair(keyPair, encryptedPrivateKey);
     }
 
-    public EncryptedPrivateKeyPair createAndSaveKeys(File file) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, InvalidParameterSpecException, InvalidKeySpecException, IllegalBlockSizeException {
-        return this.createAndSaveKeys(file, null);
+    public EncryptedPrivateKeyPair createAndSaveKeys(File pk_key, File pb_file) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, BadPaddingException, InvalidParameterSpecException, InvalidKeySpecException, IllegalBlockSizeException {
+        return this.createAndSaveKeys(pk_key, pb_file, null);
     }
 
     public static class EncryptedPrivateKeyPair {

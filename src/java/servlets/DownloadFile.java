@@ -70,10 +70,8 @@ public class DownloadFile extends HttpServlet {
             outStream.write(buffer, 0, bytesRead);
                  
         inStream.close();
-        outStream.close();  
-        
-        
-        
+        outStream.close();
+        file_to_download.delete();
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
