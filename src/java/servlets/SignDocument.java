@@ -71,7 +71,7 @@ public class SignDocument extends HttpServlet {
             request.setAttribute("file_path", path);
             request.setAttribute("file_name", ProjectConstants.PDF_FILE_DEFAULT_NAME);
                         
-            String private_key = Streams.asString(filePart.getInputStream(), "UTF-8");            
+            String private_key = Streams.asString(filePart.getInputStream(), "UTF-8");
             File pdf = PDF.createPDF(person, path);
             
             PrivateKeySigner signer = new PrivateKeySigner();

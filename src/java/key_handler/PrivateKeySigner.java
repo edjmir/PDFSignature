@@ -25,6 +25,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
 import java.util.regex.Pattern;
+import utils.ProjectConstants;
 
 public class PrivateKeySigner {
     private static final Pattern NO_WHITESPACES = Pattern.compile("[\\s]+", Pattern.DOTALL | Pattern.MULTILINE);
@@ -88,7 +89,7 @@ public class PrivateKeySigner {
         if (this.privateKey == null)
             throw new IllegalStateException("The private key should be loaded first!");
 
-        Signature signer = Signature.getInstance("SHA256withRSA");
+        Signature signer = Signature.getInstance(ProjectConstants.SIGNATURE);
         signer.initSign(this.privateKey);
         signer.update(Files.readAllBytes(file.toPath()));
         return signer.sign();

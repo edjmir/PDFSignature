@@ -12,6 +12,10 @@
         <servlet-name>DownloadFile</servlet-name>
         <servlet-class>servlets.DownloadFile</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>VerifySign</servlet-name>
+        <servlet-class>servlets.VerifySign</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>SignDocument</servlet-name>
         <url-pattern>/SignDocument</url-pattern>
@@ -23,6 +27,10 @@
     <servlet-mapping>
         <servlet-name>DownloadFile</servlet-name>
         <url-pattern>/DownloadFile</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VerifySign</servlet-name>
+        <url-pattern>/VerifySign</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

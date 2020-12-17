@@ -128,7 +128,7 @@ public class KeyPairGen {
      */
     public KeyPair genKeyPair() throws NoSuchAlgorithmException {
         if (this.keyPair != null)
-                return this.keyPair;
+            return this.keyPair;
 
         // create private key
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(this.KEY_ALGORITHM);

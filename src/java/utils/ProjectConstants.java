@@ -6,6 +6,7 @@ public class ProjectConstants {
     public static final String PRIVKEY_ENCRYPTION_DEFAULT_ALGORITHM = "PBEWithSHA1AndDESede";
     public static final String KEY_DEFAULT_ALGORITHM = "RSA";
     public static final short KEY_DEFAULT_SIZE = 4096;
+    public static final String SIGNATURE = "SHA256withRSA";
     
     //KEY STORAGE
         //PRIVATE KEY

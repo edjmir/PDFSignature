@@ -17,11 +17,53 @@
     </nav>
     <div class="mt-2 d-flex align-items-center container">
         <div class="column w-100">
-            <div class="row d-flex justify-content-center mb-2">
-                <p class="h4 text-center">Hola</p>
+            <div class="row d-flex justify-content-center mt-5">
+                <p class="h3 text-center">Hola</p>
             </div>
-            <div class="row">
-                <div class="card-deck">
+            <div class="row mt-5 d-flex align-items-stretch">
+                <div class="col-md-12 col-lg-6 col-xl-4 mb-5 d-flex align-items-stretch">
+                    <div class="card">
+                        <div class="container d-flex justify-content-around mt-2">
+                            <div class="row">
+                                <div class="col-md-4 col-sm-12">
+                                    <img class="rounded-circle" src="./img/key.png" width="100%">
+                                </div>
+                                <div class="col-md-8 col-sm-12 d-flex align-items-center">
+                                    <p class="card-title h5">Crea tu par de llaves</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="container">
+                                <form id="download-keys-form" method="POST" action="/SignDocument" enctype="multipart/form-data">
+                                    <div class="form-row">
+                                        <!--is-invalid is-valid-->
+                                        <div class="col mb-3">
+                                            <label for="download-key-passphrase">Contraseña</label>
+                                            <input type="text" class="form-control" placeholder="Contraseña" id="download-key-passphrase" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row d-flex justify-content-end">
+                                        <button class="btn btn-primary mr-1" type="button" id="download-key-btn">Descargar llaves</button>
+                                    </div>
+                                </form>
+                                <div class="row mt-3">
+                                    <p class="text-secondary mr-2 text-justify">
+                                        Una firma digital es un sello electrónico cifrado sobre información digital como: 
+                                        mensajes de email, macros, documentos electrónicos, etc. 
+                                        Una firma confirma que la información originada por el firmante no ha sido alterada.
+                                    </p>
+                                    <p class="text-secondary mr-2 text-justify">
+                                        Para firmar, se requiere la llave privada que sólo poseera el firmante 
+                                        y la llave pública, que poseera cualquiera que quiera comprobar la firma
+                                    </p>
+                                    <p class="bg-dark text-white" id="entity"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-6 col-xl-4 mb-5 d-flex align-items-stretch">
                     <div class="card">
                         <div class="container d-flex justify-content-around mt-2">
                             <div class="row">
@@ -63,16 +105,15 @@
                                     </div>
                                     <div class="form-row">
                                         <div class="col-md-12 mb-3">
-                                           <label for="private-key">Llave privada</label>
+                                           <label for="private-key-sign">Llave privada</label>
                                             <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="private-key" lang="es">
-                                                <label class="custom-file-label" for="private-key">Seleccionar Archivo</label>
+                                                <input type="file" class="custom-file-input" id="private-key-sign" lang="es">
+                                                <label class="custom-file-label" for="private-key-sign">Seleccionar Archivo</label>
                                             </div>
                                         </div>
                                         <div class="col-md-12 mb-3">
-                                            <label for="passphrase">Passphrase</label>
-                                            <input type="text" class="form-control" placeholder="passphrase" id="passphrase" required>
-                                            <div class="invalid-feedback">Al parecer tu edad es incorrecta</div>
+                                            <label for="passphrase-sign">Passphrase</label>
+                                            <input type="text" class="form-control" placeholder="passphrase" id="passphrase-sign" required>
                                         </div>
                                     </div>
                                     <div class="form-row d-flex justify-content-end">
@@ -82,6 +123,8 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="col-md-12 col-lg-6 col-xl-4 mb-5 d-flex align-items-stretch">
                     <div class="card">
                         <div class="container d-flex justify-content-around mt-2">
                             <div class="row">
@@ -95,53 +138,31 @@
                         </div>
                         <div class="card-body">
                             <div class="container">
-                               <form action="">
+                                <form action="">
                                    <div class="form-row">
                                        <div class="col-md-12 mb-3">
-                                            <label for="public-key">Llave pública</label>
+                                            <label for="public-key-verify">Llave pública</label>
                                             <div class="custom-file">
-                                                <input type="file" class="custom-file-input" id="public-key" lang="es">
-                                                <label class="custom-file-label" for="public-key">Seleccionar Archivo</label>
+                                                <input type="file" class="custom-file-input" id="public-key-verify" lang="es">
+                                                <label class="custom-file-label" for="public-key-verify">Seleccionar Archivo</label>
+                                            </div>
+                                        </div>
+                                       <div class="col-md-12 mb-3">
+                                           <label for="pdf-file">archivo PDF</label>
+                                            <div class="custom-file">
+                                                <input type="file" class="custom-file-input" id="pdf-file" lang="es">
+                                                <label class="custom-file-label" for="pdf-file">Seleccionar Archivo</label>
                                             </div>
                                         </div>
                                    </div>
                                    <div class="form-row d-flex justify-content-end">
                                         <button class="btn btn-primary mr-1" type="button" id="verify-sign-btn">verificar firma</button>
                                     </div>
-                               </form>
-                                
+                                </form>
                                 <div class="container row mt-2">
                                     <p class="text-secondary mr-2">Firmado por:</p>
                                     <p class="bg-dark text-white" id="entity"></p>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="container d-flex justify-content-around mt-2">
-                            <div class="row">
-                                <div class="col-md-4 col-sm-12">
-                                    <img class="rounded-circle" src="./img/key.png" width="100%">
-                                </div>
-                                <div class="col-md-8 col-sm-12 d-flex align-items-center">
-                                    <p class="card-title h5">Crea tu par de llaves</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="container">
-                                <form id="download-keys-form" method="POST" action="/SignDocument" enctype="multipart/form-data">
-                                    <div class="form-row">
-                                        <!--is-invalid is-valid-->
-                                        <div class="col mb-3">
-                                            <label for="download-key-passphrase">Contraseña</label>
-                                            <input type="text" class="form-control" placeholder="Contraseña" id="download-key-passphrase" required>
-                                        </div>
-                                    </div>
-                                    <div class="form-row d-flex justify-content-end">
-                                        <button class="btn btn-primary mr-1" type="button" id="download-key-btn">Descargar firma</button>
-                                    </div>
-                                </form>
                             </div>
                         </div>
                     </div>
