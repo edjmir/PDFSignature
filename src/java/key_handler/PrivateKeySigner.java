@@ -16,6 +16,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
@@ -55,9 +56,13 @@ public class PrivateKeySigner {
         if (passphrase != null)
             privKeyBytes = this.decryptBytes(privKeyBytes, passphrase);
 
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        KeySpec keySpec = new PKCS8EncodedKeySpec(privKeyBytes, "RSA");
+        KeyFactory keyFactory = KeyFactory.getInstance(ProjectConstants.KEY_DEFAULT_ALGORITHM);
+        KeySpec keySpec = new PKCS8EncodedKeySpec(privKeyBytes, ProjectConstants.KEY_DEFAULT_ALGORITHM);
         return (this.privateKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec));
+    }
+    
+    public PrivateKey getPrivateKey(){
+        return this.privateKey;
     }
     
     public RSAPrivateKey loadPrivateKey(String files_str, String passphrase) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, InvalidAlgorithmParameterException, NoSuchPaddingException {
@@ -80,8 +85,8 @@ public class PrivateKeySigner {
         if (passphrase != null)
             privKeyBytes = this.decryptBytes(privKeyBytes, passphrase);
 
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        KeySpec keySpec = new PKCS8EncodedKeySpec(privKeyBytes, "RSA");
+        KeyFactory keyFactory = KeyFactory.getInstance(ProjectConstants.KEY_DEFAULT_ALGORITHM);
+        KeySpec keySpec = new PKCS8EncodedKeySpec(privKeyBytes, ProjectConstants.KEY_DEFAULT_ALGORITHM);
         return (this.privateKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec));
     }
 
@@ -92,6 +97,7 @@ public class PrivateKeySigner {
         Signature signer = Signature.getInstance(ProjectConstants.SIGNATURE);
         signer.initSign(this.privateKey);
         signer.update(Files.readAllBytes(file.toPath()));
+        
         return signer.sign();
     }
 

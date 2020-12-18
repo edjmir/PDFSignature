@@ -1,12 +1,18 @@
 package servlets;
 
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
+import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -50,22 +56,15 @@ public class VerifySign extends HttpServlet {
         Part pdf_part = request.getPart("pdf_file");
         Part public_key_part = request.getPart("public_key");
         
-        String pdf = Streams.asString(pdf_part.getInputStream(), "UTF-8");        
         String public_key = Streams.asString(public_key_part.getInputStream(), "UTF-8");
+        String signature = parsePdf(pdf_part.getInputStream());
+        byte[] signature_bytes = signature.getBytes();
         
-        byte[] pdf_bytes = pdf.getBytes(StandardCharsets.UTF_8);
         try {
-            /*
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        KeySpec keySpec = new PKCS8EncodedKeySpec(privKeyBytes, "RSA");
-        return (this.privateKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec));
-            */
-            
-            Signature signature = Signature.getInstance(ProjectConstants.SIGNATURE);
             PublicKeyVerifier pkv = new PublicKeyVerifier();
             pkv.loadPublicKey(public_key);
             
-            boolean is_verified = pkv.isVerified(signature, pdf_bytes);
+            boolean is_verified = pkv.isVerified(signature_bytes);
             
             response.setStatus(200, is_verified ? "Data is verified" : "Signature doesn't match");
             
@@ -76,6 +75,8 @@ public class VerifySign extends HttpServlet {
             response.setStatus(500);
             Logger.getLogger(VerifySign.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        
         
         
     }
@@ -119,4 +120,27 @@ public class VerifySign extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
+    /**
+         * Parses a PDF to a plain text file.
+         * @param pdf_path the original PDF
+         * @return signature
+         * @throws IOException
+         */
+        public static String parsePdf(InputStream pdf_path) throws IOException {
+            final Pattern NO_WHITESPACES = Pattern.compile("[\\s]+", Pattern.DOTALL | Pattern.MULTILINE);
+            
+            PdfReader reader = new PdfReader(pdf_path);
+            PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+            
+            StringBuilder stringBuilder = new StringBuilder(600);
+            TextExtractionStrategy strategy;
+            for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+                strategy = parser.processContent(i, new SimpleTextExtractionStrategy());
+                stringBuilder.append(strategy.getResultantText());
+            }
+            reader.close();
+            String signature = stringBuilder.toString();
+            signature = NO_WHITESPACES.matcher(signature).replaceAll("");
+            return signature.substring(0, 684);
+        }
 }

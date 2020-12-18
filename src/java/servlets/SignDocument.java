@@ -7,13 +7,26 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfImportedPage;
+import com.itextpdf.text.pdf.PdfName;
+import com.itextpdf.text.pdf.PdfObject;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfSignatureAppearance;
+import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -21,7 +34,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.servlet.http.Part;
@@ -68,29 +80,58 @@ public class SignDocument extends HttpServlet {
                 .concat("-")
                 .concat(ProjectConstants.PDF_FILE_DEFAULT_NAME);
             
-            request.setAttribute("file_path", path);
-            request.setAttribute("file_name", ProjectConstants.PDF_FILE_DEFAULT_NAME);
+            String final_path = ProjectConstants.PDF_FILE_DEFAULT_PATH
+                .concat(String.valueOf(System.currentTimeMillis()))
+                .concat("-final-")
+                .concat(ProjectConstants.PDF_FILE_DEFAULT_NAME);
+            
+            
                         
             String private_key = Streams.asString(filePart.getInputStream(), "UTF-8");
             File pdf = PDF.createPDF(person, path);
             
             PrivateKeySigner signer = new PrivateKeySigner();
             
-            if("null".equals(String.valueOf(passphrase))){
-                System.out.println("Hola, sí entré");
+            /*if("null".equals(String.valueOf(passphrase)))
                 signer.loadPrivateKey(private_key, null);
-                
-            }
-            else{
-                System.out.println("Perro" + passphrase);
+            else
                 signer.loadPrivateKey(private_key, passphrase);
-                
-            }
             
             System.out.println(
                 "Signature: " + Base64.getEncoder().encodeToString(signer.sign(pdf))
-            );
-            signer.sign(pdf);
+            );*/
+            
+            KeyStore ks = KeyStore.getInstance("pkcs12");
+            
+            char[] password = null;
+            
+            if(!"null".equals(String.valueOf(passphrase)))
+                password = passphrase.toCharArray();
+            
+            ks.load(filePart.getInputStream(), password);
+            
+            String alias = (String) ks.aliases().nextElement();
+            PrivateKey key = (PrivateKey) ks.getKey(alias, password);
+            Certificate[] chain = ks.getCertificateChain(alias);
+            //pdf = PDF.appendSignature(pdf, Base64.getEncoder().encodeToString(signer.sign(pdf)));
+            
+            PdfReader reader = new PdfReader(pdf.getAbsolutePath());
+            File final_pdf = new File(final_path);
+            FileOutputStream fout = new FileOutputStream(final_pdf);
+            
+            PdfStamper stp = PdfStamper.createSignature(reader, fout, '\0', new File("/temp"), true);
+            
+            PdfSignatureAppearance sap = stp.getSignatureAppearance();
+            
+            sap.setCrypto(signer.getPrivateKey(), chain, null, PdfSignatureAppearance.CERTIFIED_NO_CHANGES_ALLOWED);
+            sap.setReason("I'm the author");
+            sap.setLocation("Lisbon");
+            // comment next line to have an invisible signature
+            sap.setVisibleSignature(new Rectangle(100, 100, 200, 200), 1, null);
+            stp.close();
+            
+            request.setAttribute("file_path", final_path);
+            request.setAttribute("file_name", ProjectConstants.PDF_FILE_DEFAULT_NAME);
             
             request.getRequestDispatcher("DownloadFile").forward(request, response);            
         } catch (Exception ex) {
@@ -198,6 +239,40 @@ public class SignDocument extends HttpServlet {
             }
             return null;
         }
+        
+        public static File appendSignature(File pdf, String signature) {
+            try {
+                Document document = new Document();
+                PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(pdf, true));
+                document.open();
+                
+                PdfContentByte cb = writer.getDirectContent();
+                
+                PdfReader reader = new PdfReader(pdf.getAbsolutePath());
+                PdfImportedPage page = writer.getImportedPage(reader, 1);
+                
+                document.newPage();
+                cb.addTemplate(page, 0, 0);
+                
+                Font font_left = FontFactory.getFont(FontFactory.TIMES_ROMAN, 8, Element.ALIGN_LEFT, BaseColor.GRAY);
+                Chunk line_separator = new Chunk(new LineSeparator(font_left));
+                
+                document.add(Chunk.NEWLINE);
+                document.add(Chunk.NEWLINE);
+                document.add(new Phrase("\n"));
+                document.add(new Paragraph("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"));
+                document.add(new Paragraph(signature, font_left));
+                document.close();
+                
+                return pdf;
+            }catch (Exception e) {
+                System.out.println("ia estoy harto");
+            }
+            
+            return null;
+        }
+        
+        
         
     }
 

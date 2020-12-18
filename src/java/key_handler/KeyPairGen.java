@@ -192,9 +192,7 @@ public class KeyPairGen {
         StringBuilder pb_builder = new StringBuilder(privKeyEncrypted.length() + 60 /* for the BEGIN/END lines*/);
 
         // add header
-        pb_builder.append("-----BEGIN ");
-        pb_builder.append(this.KEY_ALGORITHM);
-        pb_builder.append(" PUBLIC KEY-----\n");
+        pb_builder.append("-----BEGIN PUBLIC KEY-----\n");
 
         // split the string in chunks of 64 chars
         i = 0;
@@ -206,9 +204,7 @@ public class KeyPairGen {
         }
 
         // add footer
-        pb_builder.append("-----END ");
-        pb_builder.append(this.KEY_ALGORITHM);
-        pb_builder.append(" PUBLIC KEY-----\n");
+        pb_builder.append("-----END PUBLIC KEY-----\n");
         
         try (FileOutputStream outStream = new FileOutputStream(pb_file)) {
             outStream.write(pb_builder.toString().getBytes(StandardCharsets.UTF_8));
