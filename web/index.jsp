@@ -115,6 +115,10 @@
                                             <label for="passphrase-sign">Passphrase</label>
                                             <input type="text" class="form-control" placeholder="passphrase" id="passphrase-sign" required>
                                         </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label for="sign-comment">Comentario</label>
+                                            <textarea class="form-control" placeholder="Comentario" id="sign-comment"></textarea>
+                                        </div>
                                     </div>
                                     <div class="form-row d-flex justify-content-end">
                                         <button class="btn btn-primary mr-1" type="button" id="sign-document-btn">Firmar archivo</button>
@@ -147,11 +151,18 @@
                                                 <label class="custom-file-label" for="public-key-verify">Seleccionar Archivo</label>
                                             </div>
                                         </div>
-                                       <div class="col-md-12 mb-3">
+                                        <div class="col-md-12 mb-3">
                                            <label for="pdf-file">archivo PDF</label>
                                             <div class="custom-file">
                                                 <input type="file" class="custom-file-input" id="pdf-file" lang="es">
                                                 <label class="custom-file-label" for="pdf-file">Seleccionar Archivo</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                           <label for="signature-file">firma digital</label>
+                                            <div class="custom-file">
+                                                <input type="file" class="custom-file-input" id="signature-file" lang="es">
+                                                <label class="custom-file-label" for="signature-file">Seleccionar Archivo</label>
                                             </div>
                                         </div>
                                    </div>

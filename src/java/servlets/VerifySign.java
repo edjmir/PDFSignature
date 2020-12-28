@@ -1,18 +1,8 @@
 package servlets;
 
-import com.itextpdf.text.pdf.PdfReader;
-import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
-import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
-import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.Base64;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -23,7 +13,6 @@ import javax.servlet.http.Part;
 import key_handler.PublicKeyVerifier;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
-import utils.ProjectConstants;
 
 
 @WebServlet(name="VerifySign", urlPatterns = {"/VerifySign"})
@@ -55,16 +44,20 @@ public class VerifySign extends HttpServlet {
         
         Part pdf_part = request.getPart("pdf_file");
         Part public_key_part = request.getPart("public_key");
+        Part signature_part = request.getPart("signature_file");
         
         String public_key = Streams.asString(public_key_part.getInputStream(), "UTF-8");
-        String signature = parsePdf(pdf_part.getInputStream());
-        byte[] signature_bytes = signature.getBytes();
         
         try {
             PublicKeyVerifier pkv = new PublicKeyVerifier();
             pkv.loadPublicKey(public_key);
             
-            boolean is_verified = pkv.isVerified(signature_bytes);
+            byte[] pdf_bytes = pdf_part.getInputStream().readAllBytes();
+            
+            byte[] signature_bytes = Base64.getDecoder().decode(signature_part.getInputStream().readAllBytes());
+            System.out.println(new String(signature_bytes));
+            
+            boolean is_verified = pkv.isVerified(signature_bytes, pdf_bytes);
             
             response.setStatus(200, is_verified ? "Data is verified" : "Signature doesn't match");
             
@@ -72,12 +65,10 @@ public class VerifySign extends HttpServlet {
             System.out.println(is_verified);
             
         } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            System.out.println(Arrays.toString(ex.getStackTrace()));
             response.setStatus(500);
-            Logger.getLogger(VerifySign.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-        
         
     }
 
@@ -126,7 +117,7 @@ public class VerifySign extends HttpServlet {
          * @return signature
          * @throws IOException
          */
-        public static String parsePdf(InputStream pdf_path) throws IOException {
+        /*public static String parsePdf(InputStream pdf_path) throws IOException {
             final Pattern NO_WHITESPACES = Pattern.compile("[\\s]+", Pattern.DOTALL | Pattern.MULTILINE);
             
             PdfReader reader = new PdfReader(pdf_path);
@@ -142,5 +133,5 @@ public class VerifySign extends HttpServlet {
             String signature = stringBuilder.toString();
             signature = NO_WHITESPACES.matcher(signature).replaceAll("");
             return signature.substring(0, 684);
-        }
+        }*/
 }

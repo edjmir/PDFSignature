@@ -19,11 +19,11 @@ public class PublicKeyVerifier {
     private static final Pattern NO_WHITESPACES = Pattern.compile("[\\s]+", Pattern.DOTALL | Pattern.MULTILINE);
     private RSAPublicKey publicKey;
     
-    public RSAPublicKey loadPublicKey (String files_str) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public RSAPublicKey loadPublicKey (String pb_str) throws NoSuchAlgorithmException, InvalidKeySpecException {
         if (this.publicKey != null)
             return this.publicKey;
         
-        String content = String.join("", files_str);
+        String content = String.join("", pb_str);
 
         // remove noise
         content = content.replace("-----BEGIN PUBLIC KEY-----", "")
@@ -34,11 +34,10 @@ public class PublicKeyVerifier {
         byte[] pubKeyBytes = Base64.getDecoder().decode(content.getBytes(StandardCharsets.UTF_8));
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pubKeyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        RSAPublicKey temp = (RSAPublicKey) keyFactory.generatePublic(keySpec);
         return (this.publicKey = (RSAPublicKey) keyFactory.generatePublic(keySpec));
     }
     
-    public boolean isVerified(byte[] signature2verify) 
+    public boolean isVerified(byte[] signature_bytes, byte[] pdf_bytes) 
             throws InvalidKeyException, SignatureException, IllegalStateException, NoSuchAlgorithmException {
         
         Signature signature = Signature.getInstance(ProjectConstants.SIGNATURE);
@@ -47,9 +46,9 @@ public class PublicKeyVerifier {
             throw new IllegalStateException("The public key should be loaded first!");
         
         signature.initVerify(this.publicKey);
-        signature.update(signature2verify);
+        signature.update(pdf_bytes);
         
-        return signature.verify(signature2verify);
+        return signature.verify(signature_bytes);
     }
     
 }

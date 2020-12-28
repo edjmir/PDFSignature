@@ -12,6 +12,7 @@ const age = document.querySelector("#age");
 const identifier = document.querySelector("#identifier"); // boleta
 const private_key_sign = document.querySelector("#private-key-sign");
 const passphrase_sign = document.querySelector("#passphrase-sign");
+const comment = document.querySelector("#sign-comment");
 
 //Create Keys
 const download_key_passphrase = document.querySelector("#download-key-passphrase");
@@ -19,6 +20,7 @@ const download_key_passphrase = document.querySelector("#download-key-passphrase
 //Verify Sign
 const public_key_verify = document.querySelector("#public-key-verify");
 const pdf_file = document.querySelector("#pdf-file");
+const signature_file = document.querySelector("#signature-file");
 
 window.addEventListener("load", () => {
     addListeners();
@@ -42,12 +44,17 @@ const addListeners = () => {
         addFile(this);
     });
     
+    signature_file.addEventListener("change", function (){
+        addFile(this);
+    });
+    
     sign_document_btn.addEventListener("click", async ()=> {
         let form_data = new FormData();
         form_data.append("file", private_key_sign.files[0]);
         form_data.append("name", name.value);
         form_data.append("lastname", lastname.value);
         form_data.append("age", age.value);
+        form_data.append("comment", comment.value);
         form_data.append("identifier", identifier.value);
         form_data.append("passphrase", passphrase_sign.value.length ? passphrase_sign.value : null);
         
@@ -56,12 +63,13 @@ const addListeners = () => {
             body: form_data
         }).then( res => res.blob() )
         .then( blob => {
+            console.log(blob);
             if(blob.size === 0){
                 console.log("Error de los datos");
                 return;
             }
             var file = window.URL.createObjectURL(blob);
-            let file_name = "MyPdf.pdf";
+            let file_name = "pdf.zip";
             //window.location.assign(file);
             
             let link = document.createElement('a');
@@ -98,6 +106,7 @@ const addListeners = () => {
         let form_data = new FormData();
         form_data.append("public_key", public_key_verify.files[0]);
         form_data.append("pdf_file", pdf_file.files[0]);
+        form_data.append("signature_file", signature_file.files[0]);
         
         let res = await fetch("VerifySign", {
             method: "POST",

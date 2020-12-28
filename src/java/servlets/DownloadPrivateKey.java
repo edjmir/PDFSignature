@@ -1,24 +1,16 @@
 package servlets;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import javax.crypto.EncryptedPrivateKeyInfo;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import key_handler.KeyPairGen;
+import utils.FileManagement;
 import utils.ProjectConstants;
 
 public class DownloadPrivateKey extends HttpServlet {
-    
-    private final short BUFFER_SIZE = 4096;
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -50,21 +42,17 @@ public class DownloadPrivateKey extends HttpServlet {
             return;
         }
         
-        final String zip_path = ProjectConstants.ZIP_KEYS_FILE_DEFAULT_PATH
+        final String zip_path = ProjectConstants.ZIP_FILE_DEFAULT_PATH
             .concat(String.valueOf(System.currentTimeMillis()))
             .concat(ProjectConstants.ZIP_KEYS_FILE_DEFAULT_NAME);
-        
-        try(ZipOutputStream zout = new ZipOutputStream(
-            new FileOutputStream(
-                new File(zip_path)), StandardCharsets.UTF_8
-            )
-        ){
-            writeToZip(pk_file, zout);
-            writeToZip(pb_file, zout);
+        try{
+            FileManagement fileManagement = new FileManagement();
+            fileManagement.createZip(zip_path, pk_file, pb_file);
+            fileManagement.deleteFiles(pk_file, pb_file);
+        }catch(IOException e){
+            response.setStatus(500);
+            return;
         }
-        
-        pk_file.delete();
-        pb_file.delete();
         
         request.setAttribute("file_path", zip_path);
         request.setAttribute("file_name", ProjectConstants.ZIP_KEYS_FILE_DEFAULT_NAME);
@@ -111,16 +99,4 @@ public class DownloadPrivateKey extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private void writeToZip(File file, ZipOutputStream zos) throws FileNotFoundException, IOException{
-        FileInputStream fis = new FileInputStream(file);
-        ZipEntry zipEntry = new ZipEntry(file.getName());
-        zos.putNextEntry(zipEntry);
-        
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead;
-        while ((bytesRead = fis.read(buffer)) != -1)
-            zos.write(buffer, 0, bytesRead);
-        zos.closeEntry();
-        fis.close();
-    }
 }
