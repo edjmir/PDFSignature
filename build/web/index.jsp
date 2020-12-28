@@ -57,7 +57,6 @@
                                         Para firmar, se requiere la llave privada que sólo poseera el firmante 
                                         y la llave pública, que poseera cualquiera que quiera comprobar la firma
                                     </p>
-                                    <p class="bg-dark text-white" id="entity"></p>
                                 </div>
                             </div>
                         </div>
@@ -171,7 +170,7 @@
                                     </div>
                                 </form>
                                 <div class="container row mt-2">
-                                    <p class="text-secondary mr-2">Firmado por:</p>
+                                    <p class="text-secondary mr-2">Resultado:</p>
                                     <p class="bg-dark text-white" id="entity"></p>
                                 </div>
                             </div>

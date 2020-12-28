@@ -21,6 +21,7 @@ const download_key_passphrase = document.querySelector("#download-key-passphrase
 const public_key_verify = document.querySelector("#public-key-verify");
 const pdf_file = document.querySelector("#pdf-file");
 const signature_file = document.querySelector("#signature-file");
+const verify_response = document.querySelector("#entity");
 
 window.addEventListener("load", () => {
     addListeners();
@@ -61,13 +62,12 @@ const addListeners = () => {
         let res = await fetch("SignDocument", {
             method: "POST",
             body: form_data
-        }).then( res => res.blob() )
-        .then( blob => {
-            console.log(blob);
-            if(blob.size === 0){
-                console.log("Error de los datos");
+        }).then( response => {
+            handleError(response.status);
+            return response.blob();
+        }).then( blob => {
+            if(blob.size === 0)
                 return;
-            }
             var file = window.URL.createObjectURL(blob);
             let file_name = "pdf.zip";
             //window.location.assign(file);
@@ -83,8 +83,6 @@ const addListeners = () => {
         }).catch((error) => {
             console.error('Error:', error);
         });
-        
-        console.log(res);
     });
     
     download_key_btn.addEventListener("click", async ()=> {
@@ -112,11 +110,22 @@ const addListeners = () => {
             method: "POST",
             body: form_data
         })
-        .then(response => response.json())
-        .then((response)=> {
-            console.log(response);
+        .then(response => {
+            handleError(response.status);
+            return response.json();
+        }).then((response)=> {
+            verify_response.innerHTML = response.verified ? "Coinciden" : "No coinciden";
         });
     });
+};
+
+const handleError = (status)=>{
+    if(status === 400)
+        alert("Verifica la información que has enviado");
+    else if (status === 500)
+        alert("Ha ocurrido un error inesperado");
+    else if (status !== 200)
+        alert("Algo salió mal, vuelve a intentarlo");
 };
 
 const downloadFile = (method, url, content_type, data, blob_type, file_def_name) => {

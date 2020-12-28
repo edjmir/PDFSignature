@@ -1,6 +1,8 @@
 package servlets;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Base64;
 import javax.servlet.ServletException;
@@ -34,8 +36,10 @@ public class VerifySign extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
+        
+        PrintWriter out = response.getWriter();
         
         if (!ServletFileUpload.isMultipartContent(request)){
             response.setStatus(400);
@@ -47,29 +51,40 @@ public class VerifySign extends HttpServlet {
         Part signature_part = request.getPart("signature_file");
         
         String public_key = Streams.asString(public_key_part.getInputStream(), "UTF-8");
+        if("undefined".equals(public_key)){
+            response.setStatus(400);
+            out.print("{\"warning\" : \"Invalid data\"}");
+            return;
+        }
         
         try {
             PublicKeyVerifier pkv = new PublicKeyVerifier();
             pkv.loadPublicKey(public_key);
             
             byte[] pdf_bytes = pdf_part.getInputStream().readAllBytes();
-            
             byte[] signature_bytes = Base64.getDecoder().decode(signature_part.getInputStream().readAllBytes());
-            System.out.println(new String(signature_bytes));
+            
+            if(signature_bytes.length != 512 || pdf_bytes.length < 1){
+                response.setStatus(400);
+                out.print("{\"warning\" : \"Invalid data\"}");
+                return;
+            }
             
             boolean is_verified = pkv.isVerified(signature_bytes, pdf_bytes);
+            response.setStatus(200);
+            out.print("{\"verified\" : " + is_verified + "}");
             
-            response.setStatus(200, is_verified ? "Data is verified" : "Signature doesn't match");
-            
-            System.out.println("**********************************");
-            System.out.println(is_verified);
-            
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            System.out.println(Arrays.toString(ex.getStackTrace()));
+        } catch (IllegalStateException | NoSuchAlgorithmException ex) {
+            System.err.println(ex.getMessage());
+            System.err.println(Arrays.toString(ex.getStackTrace()));
             response.setStatus(500);
+            out.print("{\"error\" : true}");
+        } catch(Exception ex){
+            System.err.println(ex.getMessage());
+            System.err.println(Arrays.toString(ex.getStackTrace()));
+            response.setStatus(400);
+            out.print("{\"warning\" : \"Invalid data\"}");
         }
-        
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
