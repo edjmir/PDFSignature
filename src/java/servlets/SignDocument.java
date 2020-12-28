@@ -4,9 +4,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -17,8 +22,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.servlet.http.Part;
 import key_handler.PrivateKeySigner;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -100,6 +110,8 @@ public class SignDocument extends HttpServlet {
                 fileManagement.createZip(zip_path, pdf_file, signature_file);
                 fileManagement.deleteFiles(pdf_file);
             }catch(IOException e){
+                System.err.println(e.getMessage());
+                System.err.println(Arrays.toString(e.getStackTrace()));
                 response.setStatus(500);
                 return;
             }
@@ -107,12 +119,21 @@ public class SignDocument extends HttpServlet {
             request.setAttribute("file_path", zip_path);
             request.setAttribute("file_name", ProjectConstants.PDF_FILE_DEFAULT_NAME);
             
-            request.getRequestDispatcher("DownloadFile").forward(request, response);            
-        } catch (Exception ex) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
+            PrintWriter out = response.getWriter();
             System.err.println(ex.getMessage());
             System.err.println(Arrays.toString(ex.getStackTrace()));
             response.setStatus(500);
+            out.print("{\"error\" : true}");
+        } catch (Exception ex) {
+            PrintWriter out = response.getWriter();
+            System.err.println(ex.getMessage());
+            System.err.println(Arrays.toString(ex.getStackTrace()));
+            response.setStatus(400);
+            out.print("{\"warning\" : \"Invalid data\"}");
         }
+        if(request.getAttribute("file_path") != null && request.getAttribute("file_name") != null)
+            request.getRequestDispatcher("DownloadFile").forward(request, response);
         
     }
     @Override

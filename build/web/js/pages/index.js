@@ -50,6 +50,16 @@ const addListeners = () => {
     });
     
     sign_document_btn.addEventListener("click", async ()=> {
+        if(!/^([a-zA-ZñÑáéíóúüÁÉÍÓÚÜ]{2,15}( )?){1,2}$/.test(name.value))
+            return alert("Verifica tu nombre");
+        if(!/^([a-zA-ZñÑáéíóúüÁÉÍÓÚÜ]{2,15}( )?){1,2}$/.test(lastname.value))
+            return alert("Verifica tus apellidos");
+        if(!/^[0-9]{1,2}$/.test(age.value))
+            return alert("Verifica tu edad");
+        if(!/^[0-9]{10}$/.test(identifier.value))
+            return alert("Verifica tu boleta");
+        if(!private_key_sign.files[0])
+            return alert("No se te olvide la llave privada");
         let form_data = new FormData();
         form_data.append("file", private_key_sign.files[0]);
         form_data.append("name", name.value);
@@ -64,14 +74,14 @@ const addListeners = () => {
             body: form_data
         }).then( response => {
             handleError(response.status);
+            if(response.status !== 200)
+                return;
             return response.blob();
         }).then( blob => {
-            if(blob.size === 0)
+            if(!blob ||blob.size === 0)
                 return;
             var file = window.URL.createObjectURL(blob);
-            let file_name = "pdf.zip";
-            //window.location.assign(file);
-            
+            let file_name = "pdf.zip";            
             let link = document.createElement('a');
             link.href = file;
             
@@ -101,6 +111,13 @@ const addListeners = () => {
     });
     
     verify_sign_btn.addEventListener("click", async() => {
+        
+        if(!public_key_verify.files[0])
+            return alert("No se te olvide la llave pública");
+        if(!pdf_file.files[0])
+            return alert("No se te olvide el pdf a verificar");
+        if(!signature_file.files[0])
+            return alert("No se te olvide la firma digital");
         let form_data = new FormData();
         form_data.append("public_key", public_key_verify.files[0]);
         form_data.append("pdf_file", pdf_file.files[0]);
@@ -121,7 +138,7 @@ const addListeners = () => {
 
 const handleError = (status)=>{
     if(status === 400)
-        alert("Verifica la información que has enviado");
+        alert("Verificala información que has enviado");
     else if (status === 500)
         alert("Ha ocurrido un error inesperado");
     else if (status !== 200)
