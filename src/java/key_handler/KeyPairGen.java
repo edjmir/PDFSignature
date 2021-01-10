@@ -133,6 +133,7 @@ public class KeyPairGen {
         // create private key
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(this.KEY_ALGORITHM);
         SecureRandom random = SecureRandom.getInstanceStrong();//.getInstance("SHA1PRNG");
+        // size and prime numbers
         keyPairGenerator.initialize(this.KEY_SIZE, random);
 
         return (this.keyPair = keyPairGenerator.generateKeyPair());
@@ -142,16 +143,16 @@ public class KeyPairGen {
         KeyPair keyPair = this.genKeyPair();
         PrivateKey privKey = keyPair.getPrivate();
         
-        //System.out.println("Pass " + passphrase == null);
         boolean encrypt = !(passphrase == null);
-        //System.out.println(encrypt + "Wow" + this.KEY_ALGORITHM);
 
-        EncryptedPrivateKeyInfo encryptedPrivateKey = encrypt ? this.encryptPrivateKey(
-            privKey,
-            passphrase,
-            this.randomSalt(),
-            this.randomIV()
-        ) : null;
+        EncryptedPrivateKeyInfo encryptedPrivateKey = encrypt ? 
+                this.encryptPrivateKey(
+                    privKey, // private key
+                    passphrase, // passphrase
+                    this.randomSalt(), //cosas de seguridad XD
+                    this.randomIV()
+                ) 
+                : null;
 
         // encode bytes to Base 64
         String privKeyEncrypted = Base64.getEncoder().encodeToString(

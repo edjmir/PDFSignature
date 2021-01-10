@@ -125,28 +125,4 @@ public class VerifySign extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
-    /**
-         * Parses a PDF to a plain text file.
-         * @param pdf_path the original PDF
-         * @return signature
-         * @throws IOException
-         */
-        /*public static String parsePdf(InputStream pdf_path) throws IOException {
-            final Pattern NO_WHITESPACES = Pattern.compile("[\\s]+", Pattern.DOTALL | Pattern.MULTILINE);
-            
-            PdfReader reader = new PdfReader(pdf_path);
-            PdfReaderContentParser parser = new PdfReaderContentParser(reader);
-            
-            StringBuilder stringBuilder = new StringBuilder(600);
-            TextExtractionStrategy strategy;
-            for (int i = 1; i <= reader.getNumberOfPages(); i++) {
-                strategy = parser.processContent(i, new SimpleTextExtractionStrategy());
-                stringBuilder.append(strategy.getResultantText());
-            }
-            reader.close();
-            String signature = stringBuilder.toString();
-            signature = NO_WHITESPACES.matcher(signature).replaceAll("");
-            return signature.substring(0, 684);
-        }*/
 }

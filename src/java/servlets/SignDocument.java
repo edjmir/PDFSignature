@@ -136,7 +136,7 @@ public class SignDocument extends HttpServlet {
         processRequest(request, response);
     }    
     
-    private static class ValidateData{
+    private static class ValidateData {
         public static Person createPerson(String name, String lastname, String identifier_str, String age_str, String comment){
             if(name == null || lastname == null || identifier_str == null || age_str == null)
                 return null;
@@ -172,7 +172,7 @@ public class SignDocument extends HttpServlet {
         private final String name;
         private final String lastname;
         private final String comment;
-        private final long identifier;
+        private final long identifier; //boleta
         private final byte age;
 
         public Person(String name, String lastname, long identifier, byte age, String comment) {
@@ -201,6 +201,7 @@ public class SignDocument extends HttpServlet {
 
     }
     
+    //To create the PDF I used an Internet SNIPET
     private static class PDF {
         
         private static final PDFont FONT = PDType1Font.HELVETICA;

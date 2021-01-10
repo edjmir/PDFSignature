@@ -40,7 +40,7 @@ public class PublicKeyVerifier {
     public boolean isVerified(byte[] signature_bytes, byte[] pdf_bytes) 
             throws InvalidKeyException, SignatureException, IllegalStateException, NoSuchAlgorithmException {
         
-        Signature signature = Signature.getInstance(ProjectConstants.SIGNATURE);
+            Signature signature = Signature.getInstance(ProjectConstants.SIGNATURE);
         
         if (this.publicKey == null)
             throw new IllegalStateException("The public key should be loaded first!");

@@ -17,6 +17,7 @@ public class DownloadPrivateKey extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
         
+        //Optional
         String passphrase = request.getParameter("passphrase");
         
         final String pk_path = ProjectConstants.PRIVATE_KEY_FILE_DEFAULT_PATH
